@@ -1,0 +1,6 @@
+*.raw
+!.raw
+!.op
+*.op
+*.log
+*.txt

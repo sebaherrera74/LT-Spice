@@ -1,0 +1,14 @@
+* C:\Users\sebah\OneDrive\Escritorio\imsated\ltspicemod\osciladores\Draft3.asc
+Q1 N002 N001 0 0 2N2222
+V1 N003 0 5
+R1 N001 N003 1
+L1 N001 N002 0.01
+XU1 N002 0 memristorR1 Ron=100 Roff=10k Rini=5k
+C1 N002 0 1000µ
+.model NPN NPN
+.model PNP PNP
+.lib C:\Users\sebah\AppData\Local\LTspice\lib\cmp\standard.bjt
+.tran 0 1000m 0
+.lib C:\Users\sebah\OneDrive\Escritorio\imsated\ltspicemod\osciladores\memresitR1.txt
+.backanno
+.end

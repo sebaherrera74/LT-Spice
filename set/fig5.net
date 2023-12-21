@@ -1,0 +1,185 @@
+************************************************************
+***       Inverter Chain                                 ***
+************************************************************
+
+
+.param temperature=0.01
+Vbias 1 0 0.035     ;  positive bias voltage
+Vdrain 2 0 0
+Vg 6 0 0          ;  gate voltage
+Vin 7 0 PWL 0 10E-3 1E-9 35E-3 35E-9 35E-3
+
+XInverter1 1 2 7 3 6 Inverter
+XInverter2 1 2 3 4 6 Inverter
+XInverter3 1 2 4 5 6 Inverter
+XInverter4 1 2 5 8 6 Inverter
+XInverter5 1 2 8 9 6 Inverter
+XInverter6 1 2 9 10 6 Inverter
+XInverter7 1 2 10 11 6 Inverter
+XInverter8 1 2 11 12 6 Inverter
+XInverter9 1 2 12 13 6 Inverter
+
+
+*Vin 5 0 PWL (0,0) (1.6E3us,25E-3)          ;  input voltage
+
+
+.SUBCKT Inverter 1 2 3 4 5    ; source drain input output gate2
+Xset1 1 4 3 5  SET PARAMS:         ;  source drain gate1 gate2
+    +C1=1E-18                      ;  Capacitance of junction 1 [F]
+    +C2=1E-18                      ;  Capacitance of junction 2 [F]
+    +R1=1E5                        ;  Resistance of junction 1 [Ohm]
+    +R2=1E5                        ;  Resistance of junction 2 [Ohm]
+    +Cg1=2E-18                     ;  Capacitance of gate 1 [F]
+    +Cg2=0                         ;  Capacitance of gate 2 [F]
+    +Q0=-0.15                        ;  Offset charge [e]
+    +TEMP={temperature}            ;  Temperature [K]
+Xset2 4 2 3 5  SET PARAMS:         ;  source drain gate1 gate2
+    +C1=1E-18                      ;  Capacitance of junction 1 [F]
+    +C2=1E-18                      ;  Capacitance of junction 2 [F]
+    +R1=1E5                        ;  Resistance of junction 1 [Ohm]
+    +R2=1E5                        ;  Resistance of junction 2 [Ohm]
+    +Cg1=2E-18                     ;  Capacitance of gate 1 [F]
+    +Cg2=0                         ;  Capacitance of gate 2 [F]
+    +Q0=0.15                       ;  Offset charge [e]
+    +TEMP= {temperature}        ;  Temperature [K]
+
+
+Rload 4 0 1000T                      ;  Load Resistance
+Cload 4 0 2E-16                    ;  Load Capacitance
+.ENDS Inverter
+
+
+
+*single electron transistor
+*connections: source
+*             | drain
+*             | | gate1
+*             | | | gate2
+*             | | | |
+.SUBCKT SET   1 2 3 4 PARAMS:
+    +C1=1E-18                      ;  Capacitance of junction 1
+    +C2=1E-18                      ;  Capacitance of junction 2
+    +R1=1E5                        ;  Resistance of junction 1
+    +R2=1E5                        ;  Resistance of junction 2
+    +Cg1=1E-18                     ;  Capacitance of gate 1
+    +Cg2=0                         ;  Capacitance of gate 2
+    +C0=0                          ;  Self Capacitance of the island
+    +Q0=0                          ;  Offset charge in units of e
+    +TEMP=4.2                      ;  Temperature
+
+
+.PARAM PI=3.1415926535897932       ;  Pi constant
+.PARAM E=1.60217733E-19            ;  Electronic charge
+.PARAM KB=1.380658E-23             ;  Boltzmann's constant
+.PARAM CSUM={C1+C2+Cg1+Cg2+C0}     ;  The total capacitance of the SET
+.PARAM T={TEMP*CSUM*5.3785467E14}  ;  Normalized temperature 5.3785467E14 = kB/e^2
+.PARAM RN1={R1/(R1+R2)}            ;  Normalized resistance of junction 1
+.PARAM RN2={R2/(R1+R2)}            ;  Normalized resistance of junction 2
+
+
+.FUNC Q(v1,v2,v3,v4) { (Cg1*v3+Cg2*v4+C1*v1+C2*v2)/E+Q0 }           ;  Definition of a charge term in units of e
+.FUNC VN(v) { CSUM*v/E }                                            ;  The normalized voltage
+.FUNC GAMMA(u) { IF(T==0,IF(u<0,-u,0),IF(u==0,T,u/(EXP(u/T)-1)))}   ;  The rate function
+.FUNC ROUND(x) { x-IF(cos(PI*x)>0,arcsin(sin(PI*x))/PI,-arcsin(sin(PI*x))/PI) } ;  The round() function
+.FUNC N_OPT(v1,v2,v3,v4) { ROUND(-Q(v1,v2,v3,v4)+(CSUM/E)*(v1*RN2+v2*RN1)) }    ;  The most probable charge on the island in units of e
+
+
+*************************** the rates for the four tunnel events*****************************
+
+
+.FUNC R1L(n,v1,v2,v3,v4) {GAMMA(0.5 - n - Q(v1,v2,v3,v4) + VN(v1))/RN1}
+.FUNC R1R(n,v1,v2,v3,v4) {GAMMA(0.5 + n + Q(v1,v2,v3,v4) - VN(v1))/RN1}
+.FUNC R2L(n,v1,v2,v3,v4) {GAMMA(0.5 + n + Q(v1,v2,v3,v4) - VN(v2))/RN2}
+.FUNC R2R(n,v1,v2,v3,v4) {GAMMA(0.5 - n - Q(v1,v2,v3,v4) + VN(v2))/RN2}
+
+
+* determine the relative probabilities, charge state N_OPT is initially assumed to have a relative probability equal to one
+
+
+.FUNC PN_1(n,v1,v2,v3,v4) {(R1L(n,v1,v2,v3,v4)+R2R(n,v1,v2,v3,v4))/(R1R(n-1,v1,v2,v3,v4)+R2L(n-1,v1,v2,v3,v4))}
+.FUNC PN_2(n,v1,v2,v3,v4) { PN_1(n,v1,v2,v3,v4)*
+                            +(R1L(n-1,v1,v2,v3,v4)+R2R(n-1,v1,v2,v3,v4))/(R1R(n-2,v1,v2,v3,v4)+R2L(n-2,v1,v2,v3,v4))}
+.FUNC PN_3(n,v1,v2,v3,v4) { PN_2(n,v1,v2,v3,v4)*
+                            +(R1L(n-2,v1,v2,v3,v4)+R2R(n-2,v1,v2,v3,v4))/(R1R(n-3,v1,v2,v3,v4)+R2L(n-3,v1,v2,v3,v4))}
+.FUNC PN_4(n,v1,v2,v3,v4) { PN_3(n,v1,v2,v3,v4)*
+                            +(R1L(n-3,v1,v2,v3,v4)+R2R(n-3,v1,v2,v3,v4))/(R1R(n-4,v1,v2,v3,v4)+R2L(n-4,v1,v2,v3,v4))}
+.FUNC PN_5(n,v1,v2,v3,v4) { PN_4(n,v1,v2,v3,v4)*
+                            +(R1L(n-4,v1,v2,v3,v4)+R2R(n-4,v1,v2,v3,v4))/(R1R(n-5,v1,v2,v3,v4)+R2L(n-5,v1,v2,v3,v4))}
+.FUNC PN1(n,v1,v2,v3,v4) {(R2L(n,v1,v2,v3,v4)+R1R(n,v1,v2,v3,v4))/(R2R(n+1,v1,v2,v3,v4)+R1L(n+1,v1,v2,v3,v4))}
+.FUNC PN2(n,v1,v2,v3,v4) { PN1(n,v1,v2,v3,v4)*
+                           +(R2L(n+1,v1,v2,v3,v4)+R1R(n+1,v1,v2,v3,v4))/(R2R(n+2,v1,v2,v3,v4)+R1L(n+2,v1,v2,v3,v4))}
+.FUNC PN3(n,v1,v2,v3,v4) { PN2(n,v1,v2,v3,v4)*
+                           +(R2L(n+2,v1,v2,v3,v4)+R1R(n+2,v1,v2,v3,v4))/(R2R(n+3,v1,v2,v3,v4)+R1L(n+3,v1,v2,v3,v4))}
+.FUNC PN4(n,v1,v2,v3,v4) { PN3(n,v1,v2,v3,v4)*
+                           +(R2L(n+3,v1,v2,v3,v4)+R1R(n+3,v1,v2,v3,v4))/(R2R(n+4,v1,v2,v3,v4)+R1L(n+4,v1,v2,v3,v4))}
+.FUNC PN5(n,v1,v2,v3,v4) { PN4(n,v1,v2,v3,v4)*
+                           +(R2L(n+4,v1,v2,v3,v4)+R1R(n+4,v1,v2,v3,v4))/(R2R(n+5,v1,v2,v3,v4)+R1L(n+5,v1,v2,v3,v4))}
+
+
+.FUNC PSUM(n,v1,v2,v3,v4) { PN_5(n,v1,v2,v3,v4)+PN_4(n,v1,v2,v3,v4)+PN_3(n,v1,v2,v3,v4)+PN_2(n,v1,v2,v3,v4)
+                           ++PN_1(n,v1,v2,v3,v4)+1+PN1(n,v1,v2,v3,v4)+PN2(n,v1,v2,v3,v4)+PN3(n,v1,v2,v3,v4)
+                           ++PN4(n,v1,v2,v3,v4)+PN5(n,v1,v2,v3,v4) }
+
+
+**************** calculate the current from source to drain ****************
+
+
+.FUNC CUR(n,v1,v2,v3,v4) { PN_5(n,v1,v2,v3,v4)*(R1R(n-5,v1,v2,v3,v4)-R1L(n-5,v1,v2,v3,v4))
+                          ++PN_4(n,v1,v2,v3,v4)*(R1R(n-4,v1,v2,v3,v4)-R1L(n-4,v1,v2,v3,v4))
+                          ++PN_3(n,v1,v2,v3,v4)*(R1R(n-3,v1,v2,v3,v4)-R1L(n-3,v1,v2,v3,v4))
+                          ++PN_2(n,v1,v2,v3,v4)*(R1R(n-2,v1,v2,v3,v4)-R1L(n-2,v1,v2,v3,v4))
+                          ++PN_1(n,v1,v2,v3,v4)*(R1R(n-1,v1,v2,v3,v4)-R1L(n-1,v1,v2,v3,v4))
+                          ++(R1R(n,v1,v2,v3,v4)-R1L(n,v1,v2,v3,v4))
+                          ++PN1(n,v1,v2,v3,v4)*(R1R(n+1,v1,v2,v3,v4)-R1L(n+1,v1,v2,v3,v4))
+                          ++PN2(n,v1,v2,v3,v4)*(R1R(n+2,v1,v2,v3,v4)-R1L(n+2,v1,v2,v3,v4))
+                          ++PN3(n,v1,v2,v3,v4)*(R1R(n+3,v1,v2,v3,v4)-R1L(n+3,v1,v2,v3,v4))
+                          ++PN4(n,v1,v2,v3,v4)*(R1R(n+4,v1,v2,v3,v4)-R1L(n+4,v1,v2,v3,v4))
+                          ++PN5(n,v1,v2,v3,v4)*(R1R(n+5,v1,v2,v3,v4)-R1L(n+5,v1,v2,v3,v4)) }
+
+
+.FUNC CURRENT(n,v1,v2,v3,v4) { E*CUR(n,v1,v2,v3,v4)/(CSUM*PSUM(n,v1,v2,v3,v4)*(R1+R2)) }
+
+
+********************** calculate the island voltage ************************
+
+
+.FUNC VOLT(n,v1,v2,v3,v4) { PN_5(n,v1,v2,v3,v4)*(n-5+Q(v1,v2,v3,v4))
+                           ++PN_4(n,v1,v2,v3,v4)*(n-4+Q(v1,v2,v3,v4))
+                           ++PN_3(n,v1,v2,v3,v4)*(n-3+Q(v1,v2,v3,v4))
+                           ++PN_2(n,v1,v2,v3,v4)*(n-2+Q(v1,v2,v3,v4))
+                           ++PN_1(n,v1,v2,v3,v4)*(n-1+Q(v1,v2,v3,v4))
+                           ++n+Q(v1,v2,v3,v4)
+                           ++PN1(n,v1,v2,v3,v4)*(n+1+Q(v1,v2,v3,v4))
+                           ++PN2(n,v1,v2,v3,v4)*(n+2+Q(v1,v2,v3,v4))
+                           ++PN3(n,v1,v2,v3,v4)*(n+3+Q(v1,v2,v3,v4))
+                           ++PN4(n,v1,v2,v3,v4)*(n+4+Q(v1,v2,v3,v4))
+                           ++PN5(n,v1,v2,v3,v4)*(n+5+Q(v1,v2,v3,v4)) }
+
+
+.FUNC VOLTAGE(n,v1,v2,v3,v4) { (E/CSUM)*VOLT(n,v1,v2,v3,v4)/PSUM(n,v1,v2,v3,v4) }
+
+
+E1 5 0 VALUE={VOLTAGE(N_OPT(V(1),V(2),V(3),V(4)),V(1),V(2),V(3),V(4))}     ;  Voltage of the island
+G1 1 2 VALUE={CURRENT(N_OPT(V(1),V(2),V(3),V(4)),V(1),V(2),V(3),V(4))}     ;  Current from source to drain
+
+
+CT1 1 5 {C1}
+CT2 2 5 {C2}
+CGATE1 3 5 {CG1}
+CGATE2 4 5 {CG2}
+.ENDS SET
+
+
+.OPTIONS VNTOL=1E-11 ABSTOL 1E-19 GMIN 1E-19 RELTOL 0.01 ITL1 300
+
+
+.IC V(3)=0.035 V(4)=0 V(5)=0.035 V(8)=0 V(9)=0.035 V(10)=0 V(11)=0.035 V(12)=0 V(13)=0.035
+.TRAN 2E-2ns 1.6ns 0ns 2E-2ns SKIPBP
+
+
+*.DC Vin -0. 0.025 0.00025
+
+
+.PRINT TRAN V(7) V(3) V(4) V(5) V(8) V(9) V(10) V(11) V(12) V(13)
+.PROBE
+.END

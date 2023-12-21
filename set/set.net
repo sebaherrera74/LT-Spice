@@ -1,0 +1,28 @@
+*modelo de Yu
+
+;.macro SET_2 1 2 3
+
+
+.SUBCKT SET_2 1 2 3 PARAMS:
+
+;.param
+
++pi=3.1415926535897932846
++CF1=40 ;2Co/e
++CI2=0.35e-9
++CR1=118e+6
++CR2=0e+6
++CVp=0.18
+
+V2 5 3 DC 0.18
+V3 7 3 DC -0.18
+RG 2 3 100G
+RR1 1 3 R='CR1+CR2*cos(CF1*pi*V(2,3))'
+RR2 1 4 R='CVp/(CI2-2*CVp/(CR1+CR2*cos(CF1*pi*V(2,3))))'
+RR3 1 6 R='CVp/(CI2-2*CVp/(CR1+CR2*cos(CF1*pi*V(2,3))))'
+D1 4 5 DIODE
+D2 7 6 DIODE
+.MODEL DIODE D(N=0.01)
+;.eom
+
+.ENDS SET_2

@@ -1,0 +1,5 @@
+* C:\Users\sebah\OneDrive\Escritorio\instrucciontran.asc
+V1 NC_01 0 SINE(0 1 60)
+.tran {1/60}
+.backanno
+.end

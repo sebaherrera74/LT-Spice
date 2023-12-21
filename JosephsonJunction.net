@@ -1,0 +1,21 @@
+* J o s e p h s o n J u n c t i o n S u b c i r c u i t
+.subckt jj Drain Source
+
+ * P a r a m e t e r s
+. param C=150 p
+. param R=30
+. param ic =250 u
+
+*Op Amp Circuit
+ XU1 0 N001 N002 N003 Phase level .2 Avol =1Meg GBW=10Meg Slew =10Meg ilimit
+     =25m rail =0 Vos=0 p him argin =45 en =0 enk =0 in =0 ink =0 Rin =500Meg
+V1 N002 0 10
+V2 N003 0 -ˆ’10
+C1 Phase N001 {C}
+R1 N001 Drain {R}
+* B e h a v i o u r a l c u r r e n t s o u r c e
+B1 Drain 0 I ={ic}*sin(v(Phase))
+
+
+. lib UniveralOpamps2.sub
+. ends jj
