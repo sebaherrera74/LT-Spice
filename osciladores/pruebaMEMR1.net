@@ -1,0 +1,7 @@
+* C:\Users\sebah\OneDrive\Escritorio\imsated\ltspicemod\osciladores\pruebaMEMR1.asc
+V1 N001 0 SINE(0 1 1)
+XU1 N001 0 memristorR1 Ron=100 Roff=10k Rini=5k
+.tran 0 10000m 0
+.lib C:\Users\sebah\OneDrive\Escritorio\imsated\ltspicemod\osciladores\memresitR1.txt
+.backanno
+.end
