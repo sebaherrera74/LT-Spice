@@ -1,0 +1,25 @@
+* C:\Users\sebah\OneDrive\Escritorio\imsated\ltspicemod\osciladores\colpitts_osc_ltspice_Memresistor_acoplado.asc
+C3 N004 0 0.1µ
+C4 1+ N005 0.1µ
+V1 Vp 0 3
+C1 Vp N002 100µ
+C2 N002 N005 47µ
+XU1 Vp N004 memristorR1 Ron=100 Roff=10k Rini=5k
+R1 N002 0 100
+R2 N004 0 1k
+Q1 N005 N004 N002 0 NPN
+L1 N005 Vp 1
+L2 N001 N003 1
+R3 N001 N003 100
+.model NPN NPN
+.model PNP PNP
+.lib C:\Users\sebah\AppData\Local\LTspice\lib\cmp\standard.bjt
+* Colpitts Oscillator
+;tran 1000m
+*.step param Cx list .1u 10u 0.10u
+*.step param Rx 1000 100000 500
+.tran 0 1000m 0
+K L1 L2 0.0040
+.lib C:\Users\sebah\OneDrive\Escritorio\imsated\ltspicemod\osciladores\memresitR1.txt
+.backanno
+.end
