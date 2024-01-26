@@ -45,7 +45,7 @@ Xset2 6 2 3 5  SET PARAMS:         ;  source drain gate1 gate2
     +TEMP={temperature}            ;  Temperature [K]
 Rload 6 0 1000T                      ;  Load Resistance
 Cload 6 0 1E-16                    ;  Load Capacitance
-Rline 6 4 10000000
+Rline 6 4 100000000
 Cline 4 0 1e-16
 
 .ENDS Inverter1
@@ -144,11 +144,11 @@ CGATE1 3 5 {CG1}
 CGATE2 4 5 {CG2}
 .ENDS SET
 
-.OPTIONS VNTOL=1E-11 ABSTOL 1E-19 GMIN 1E-19 RELTOL 0.01 ITL1 300
+*.OPTIONS VNTOL=1E-11 ABSTOL 1E-19 GMIN 1E-19 RELTOL 0.01 ITL1 300
 
 
 .IC V(3)=0.0 V(4)=0.0 V(5)=0.0
-.TRAN 55E-3ns 1500ns 0us 5E-2ns SKIPBP
+.TRAN 55E-3ns 20us 0us 5E-2ns SKIPBP
 
 
 *.DC Vin -0. 0.025 0.00025
