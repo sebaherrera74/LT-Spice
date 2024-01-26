@@ -1,0 +1,10 @@
+* C:\Users\sebah\OneDrive\Escritorio\imsated\ltspicemod\set\Draft6.asc
+XU1 Vout N002 N001 0 SET C1=1E-18
+XU2 Vout 0 N002 0 SET C1=1E-18
+Vb N001 0 20m
+Cl Vout 0 1aF
+R1 Vout N002 10m
+.tran 0 100m 0
+.lib C:\Users\sebah\OneDrive\Escritorio\imsated\ltspicemod\set\SET1-2-3.net
+.backanno
+.end
