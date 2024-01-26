@@ -13,7 +13,7 @@ Rp3  12 13 1E3
 
 
 Vdrain 2 0 0
-Vg 16 0 0          ;  gate voltage
+Vg    16 0 0          ;  gate voltage
 
 XInverter1 11 2 5 3 16 Inverter1
 XInverter2 12 2 3 4 16 Inverter1
@@ -45,37 +45,13 @@ Xset2 6 2 3 5  SET PARAMS:         ;  source drain gate1 gate2
     +TEMP={temperature}            ;  Temperature [K]
 Rload 6 0 1000T                      ;  Load Resistance
 Cload 6 0 1E-16                    ;  Load Capacitance
-Rline 6 4 10M
+Rline 6 4 10000000
 Cline 4 0 1e-16
 
 .ENDS Inverter1
 
 
 
-.SUBCKT Inverter2 1 2 3 4 5    ; source drain input output gate2
-Xset1 1 6 3 5  SET PARAMS:         ;  source drain gate1 gate2
-    +C1=1E-18                      ;  Capacitance of junction 1 [F]
-    +C2=1E-18                      ;  Capacitance of junction 2 [F]
-    +R1=1E5                        ;  Resistance of junction 1 [Ohm]
-    +R2=1E5                        ;  Resistance of junction 2 [Ohm]
-    +Cg1=2E-18                     ;  Capacitance of gate 1 [F]
-    +Cg2=0                         ;  Capacitance of gate 2 [F]
-    +Q0=-0.15                        ;  Offset charge [e]
-    +TEMP={temperature}            ;  Temperature [K]
-Xset2 6 2 3 5  SET PARAMS:         ;  source drain gate1 gate2
-    +C1=1E-18                      ;  Capacitance of junction 1 [F]
-    +C2=1E-18                      ;  Capacitance of junction 2 [F]
-    +R1=1E5                        ;  Resistance of junction 1 [Ohm]
-    +R2=1E5                        ;  Resistance of junction 2 [Ohm]
-    +Cg1=2E-18                     ;  Capacitance of gate 1 [F]
-    +Cg2=0                         ;  Capacitance of gate 2 [F]
-    +Q0=0.15                       ;  Offset charge [e]
-    +TEMP={temperature}            ;  Temperature [K]
-Rload 6 0 1000T                      ;  Load Resistance
-Cload 6 0 1E-16                    ;  Load Capacitance
-Rline 6 4 130M
-Cline 4 0 1E-16
-.ENDS Inverter2
 
 
 *single electron transistor
@@ -172,7 +148,7 @@ CGATE2 4 5 {CG2}
 
 
 .IC V(3)=0.0 V(4)=0.0 V(5)=0.0
-.TRAN 55E-3ns 15ns 0us 5E-2ns SKIPBP
+.TRAN 55E-3ns 1500ns 0us 5E-2ns SKIPBP
 
 
 *.DC Vin -0. 0.025 0.00025
